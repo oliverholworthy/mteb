@@ -1,7 +1,7 @@
 from typing import Any
 
 import torch
-from packaging.version import Version
+from packaging.specifiers import SpecifierSet
 from torch.utils.data import DataLoader
 from transformers import __version__ as transformers_version
 
@@ -27,18 +27,20 @@ class LlamaNemoretrieverColembed(AbsEncoder):
         model_name_or_path: str,
         revision: str,
         trust_remote_code: bool,
+        transformers_version_constraint: str | None = None,
         device_map="cuda",
         torch_dtype=torch.bfloat16,
         attn_implementation="flash_attention_2",
         **kwargs,
     ):
-        required_transformers_version = "4.49.0"
-
-        if Version(transformers_version) != Version(required_transformers_version):
-            raise RuntimeError(
-                f"transformers version {transformers_version} is not match with required "
-                f"install version {required_transformers_version} to run `nvidia/llama-nemoretriever-colembed`"
-            )
+        if transformers_version_constraint is not None:
+            spec = SpecifierSet(transformers_version_constraint)
+            if transformers_version not in spec:
+                raise RuntimeError(
+                    f"Model `{model_name_or_path}` requires transformers{transformers_version_constraint}, "
+                    f"but {transformers_version} is installed. "
+                    f"Run: pip install 'transformers{transformers_version_constraint}'"
+                )
 
         from transformers import AutoModel
 
@@ -150,6 +152,7 @@ llama_nemoretriever_colembed_1b_v1 = ModelMeta(
     loader=LlamaNemoretrieverColembed,
     loader_kwargs=dict(
         trust_remote_code=True,
+        transformers_version_constraint="==4.49.0",
     ),
     name="nvidia/llama-nemoretriever-colembed-1b-v1",
     model_type=["late-interaction"],
@@ -177,6 +180,7 @@ llama_nemoretriever_colembed_3b_v1 = ModelMeta(
     loader=LlamaNemoretrieverColembed,
     loader_kwargs=dict(
         trust_remote_code=True,
+        transformers_version_constraint="==4.49.0",
     ),
     name="nvidia/llama-nemoretriever-colembed-3b-v1",
     model_type=["late-interaction"],

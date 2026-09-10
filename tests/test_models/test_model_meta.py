@@ -178,10 +178,11 @@ def _openness_meta(**overwrites: Any) -> ModelMeta:
     )
 
 
-def test_openness_score_all_dimensions():
+@pytest.mark.parametrize("license_name", ["apache-2.0", "openmdw-1.1"])
+def test_openness_score_all_dimensions(license_name: str):
     meta = _openness_meta(
         open_weights=True,
-        license="apache-2.0",
+        license=license_name,
         public_training_code="https://github.com/example/train",
         public_training_data="https://huggingface.co/datasets/example",
         citation="@article{example}",
@@ -212,6 +213,13 @@ def test_openness_non_open_license_not_counted():
     assert meta.openness["open weights"] is True
     assert meta.openness["open license"] is False
     assert meta.openness_score == 2
+
+
+def test_nemotron_3_embed_1b_openness():
+    meta = mteb.get_model_meta("nvidia/Nemotron-3-Embed-1B-BF16")
+    assert meta.license == "openmdw-1.1"
+    assert meta.open_license is True
+    assert meta.openness_score == 4
 
 
 def test_model_name_without_prefix():
